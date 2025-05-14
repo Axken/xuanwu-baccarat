@@ -5,110 +5,130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>百家乐玄武三式打法 - AI强化版</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 10px; background-color: #ffffff; }
-    h1 { margin-bottom: 15px; }
-    button { margin: 3px; padding: 8px 15px; font-size: 1rem; border: none; border-radius: 5px; cursor: pointer; }
-    .btn-blue { background-color: #0000ff; color: white; }
-    .btn-red { background-color: #ff0000; color: white; }
-    .btn-gray { background-color: #888888; color: white; }
-    .btn-green { background-color: green; color: white; }
-    .btn-clear { background-color: #e74c3c; color: white; }
-    .result, .history { margin-top: 15px; text-align: left; max-width: 400px; margin: auto; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 10px;
+      background-color: #ffffff;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .points-group, .cards-group {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 8px 15px;
+      margin: 3px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      color: white;
+    }
+    .blue { background-color: #0000ff; }
+    .red { background-color: #ff0000; }
+    .gray { background-color: #888888; }
+    .green { background-color: #4CAF50; }
+    .clear { background-color: #f44336; }
+    .history, .stats, .suggestion {
+      margin: 10px auto;
+      max-width: 360px;
+      text-align: left;
+    }
     .zhuang { color: #ff0000; font-weight: bold; }
     .xian { color: #0000ff; font-weight: bold; }
   </style>
 </head>
 <body>
-
-<h1>百家乐玄武三式打法</h1>
-
-<div>
-  <div>
-    闲点数:
-    <div id="xianPoints"></div>
-  </div>
-  <div>
-    庄点数:
-    <div id="zhuangPoints"></div>
-  </div>
-  <div>
-    闲牌数:
-    <button class="btn-gray" onclick="setCards('闲牌',2)">2张</button>
-    <button class="btn-gray" onclick="setCards('闲牌',3)">3张</button>
-    庄牌数:
-    <button class="btn-gray" onclick="setCards('庄牌',2)">2张</button>
-    <button class="btn-gray" onclick="setCards('庄牌',3)">3张</button>
-  </div>
+  <h1>百家乐玄武三式打法</h1>
 
   <div>
-    <button class="btn-green" onclick="addRound()">添加本局</button>
-    <button class="btn-gray" onclick="undo()">撤销上局</button>
-    <button class="btn-clear" onclick="reset()">重置全部</button>
-  </div>
-</div>
+    <div>闲点数:</div>
+    <div class="points-group" id="xianPoints"></div>
+    <div>庄点数:</div>
+    <div class="points-group" id="zhuangPoints"></div>
 
-<div id="suggestion" class="result"></div>
-<div id="stats" class="result"></div>
-<div id="history" class="history"></div>
+    <div class="cards-group">
+      <div>闲牌数:</div>
+      <button class="gray" onclick="setCards('闲牌',2)">2张</button>
+      <button class="gray" onclick="setCards('闲牌',3)">3张</button>
+      <div>庄牌数:</div>
+      <button class="gray" onclick="setCards('庄牌',2)">2张</button>
+      <button class="gray" onclick="setCards('庄牌',3)">3张</button>
+    </div>
+
+    <div>
+      <button class="green" onclick="addRound()">添加本局</button>
+      <button class="gray" onclick="undo()">撤销上局</button>
+      <button class="clear" onclick="reset()">重置全部</button>
+    </div>
+  </div>
+
+  <div class="suggestion" id="suggestion"></div>
+  <div class="stats" id="stats"></div>
+  <div class="history" id="history"></div>
 
 <script>
 let history = [];
 let curr = {闲点:null, 庄点:null, 闲牌:2, 庄牌:2};
 
-function initButtons() {
+function createButtons(){
   ['xianPoints','zhuangPoints'].forEach((id, idx)=>{
+    let container=document.getElementById(id);
     for(let i=0;i<=9;i++){
       let btn=document.createElement('button');
-      btn.textContent=i; btn.className= idx?'btn-red':'btn-blue';
+      btn.className=idx?'red':'blue';
+      btn.textContent=i;
       btn.onclick=()=>setPoints(idx?'庄点':'闲点',i);
-      document.getElementById(id).appendChild(btn);
+      container.appendChild(btn);
     }
   });
 }
+createButtons();
 
 function setPoints(side, val){ curr[side]=val; }
 function setCards(side, num){ curr[side]=num; }
 
 function addRound(){
-  if(curr.闲点==null||curr.庄点==null){alert('请填写完整点数！');return;}
+  if(curr.闲点==null||curr.庄点==null){alert('请完整选择庄闲点数！');return;}
   let winner=curr.庄点>curr.闲点?'庄':curr.庄点<curr.闲点?'闲':'和';
   history.push({...curr, 胜方:winner});
   analyze();
   curr={闲点:null, 庄点:null, 闲牌:2, 庄牌:2};
 }
 
-function undo(){history.pop();analyze();}
-function reset(){history=[];analyze();}
+function undo(){ history.pop(); analyze(); }
+function reset(){ history=[]; analyze(); }
 
 function analyze(){
-  let hits=0,list='';
+  let hits=0,html='';
   history.forEach((h,i)=>{
-    let pred=i>0?predict(i):'无',hit=pred==h.胜方;
-    if(hit&&i>0)hits++;
-    list+=`局${i+1}: <span class="${h.胜方=='庄'?'zhuang':'xian'}">${h.胜方}</span>（庄${h.庄点}/闲${h.闲点}）`+(i>0?` 预测:${pred} ${hit?'✔️':'❌'}`:'')+'<br>';
+    let pred=i?predict(i):'观望', hit=pred==h.胜方;
+    if(i>0&&hit)hits++;
+    html+=`局${i+1}: 胜方:<span class="${h.胜方=='庄'?'zhuang':'xian'}">${h.胜方}</span> (庄:${h.庄点},闲:${h.闲点}) ${i>0?('预测:'+pred+' '+(hit?'✔️':'❌')):''}<br>`;
   });
-  let rate=((hits/(history.length-1))*100||0).toFixed(1);
-  document.getElementById('history').innerHTML=list;
-  document.getElementById('stats').textContent=`分析${history.length-1}局 命中:${hits}局 胜率:${rate}%`;
+  let total=history.length-1,rate=(hits/total*100||0).toFixed(1);
+  document.getElementById('history').innerHTML=html;
+  document.getElementById('stats').innerHTML=`分析${total}局 命中:${hits}局 胜率:${rate}%`;
   document.getElementById('suggestion').innerHTML=`下一局建议：${predict(history.length)}`;
 }
 
 function predict(i){
   if(i<1)return'观望';
-  const last=history[i-1],diff=last.庄点-last.闲点,streak=calcStreak(i-1,last.胜方);
-  if(last.胜方=='庄'&&streak>=3&&diff>=3)return'庄(R1)';
-  if(i>=2&&history[i-2].胜方=='闲'&&last.胜方=='庄'&&Math.abs(diff)<=2)return'闲(R2)';
-  if(streak<=2&&Math.abs(diff)<=1)return(last.胜方=='庄'?'闲':'庄')+'(R3)';
+  let last=history[i-1],diff=last.庄点-last.闲点,streak=streakCount(i-1,last.胜方);
+  if(last.胜方=='庄'&&streak>=3&&diff>=3)return'庄 (R1)';
+  if(i>=2&&history[i-2].胜方=='闲'&&last.胜方=='庄'&&Math.abs(diff)<=2)return'闲 (R2)';
+  if(streak<=2&&Math.abs(diff)<=1)return(last.胜方=='庄'?'闲':'庄')+' (R3)';
   return'观望';
 }
 
-function calcStreak(i,winner){
-  let c=0;
-  for(let j=i;j>=0;j--)if(history[j].胜方==winner)c++;else break;
-  return c;
+function streakCount(i,winner){
+  let c=0;for(let j=i;j>=0;j--)if(history[j].胜方==winner)c++;else break;return c;
 }
 
-initButtons();
 analyze();
 </script>
 
