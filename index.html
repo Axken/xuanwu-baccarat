@@ -7,25 +7,34 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 5px;
       text-align: center;
       background: #fff;
       margin: 0;
+      padding:10px;
     }
-    .title { font-size: 20px; margin-bottom: 15px; }
-    .container { display: flex; justify-content: center; }
-    .column { display: flex; flex-direction: column; align-items: center; margin: 5px; }
-    .btn { padding: 5px 10px; margin: 5px; border: none; color: #fff; cursor: pointer; border-radius: 8px; }
+    .title { font-size: 22px; margin-bottom: 15px; }
+    .container { display: flex; justify-content: center; gap: 10px;}
+    .column { display: flex; flex-direction: column; align-items: center;}
+    .btn { padding: 8px 15px; margin: 5px; border: none; color: #fff; cursor: pointer; border-radius: 8px; }
     .player { background-color: #0000ff; }
     .banker { background-color: #ff0000; }
     .card { font-weight: bold; font-size:14px; }
-    .action-btn { padding: 10px 20px; margin: 10px; font-weight: bold; border-radius: 6px; }
+    .action-btn { padding: 10px 20px; margin: 10px; font-weight: bold; border-radius: 6px; color: white; }
     .green { background-color: #4CAF50; }
     .blue { background-color: #3498DB; }
     .red { background-color: #E74C3C; }
     .history { text-align: left; margin: 10px auto; max-width: 300px; }
+    .active {background-color: #555 !important; color: #fff;}
+    .num-btn{
+      width:40px; height:40px;
+      font-size:16px; margin:2px;
+      border-radius:4px; border:none;
+      cursor:pointer;
+      background-color:#f0f0f0;
+    }
     .result-player { background: #0000ff; color: #fff; padding: 3px 8px; border-radius: 5px; }
     .result-banker { background: #ff0000; color: #fff; padding: 3px 8px; border-radius: 5px; }
+    .suggestion{color:#fff;padding:3px 8px;border-radius:5px;font-weight:bold;}
   </style>
 </head>
 <body>
@@ -36,39 +45,39 @@
   <div class="column">
     <div class="btn player">闲家</div>
     <div id="playerPoints">
-      <button onclick="setPoint('闲',1)">1</button>
-      <button onclick="setPoint('闲',2)">2</button>
-      <button onclick="setPoint('闲',3)">3</button><br>
-      <button onclick="setPoint('闲',4)">4</button>
-      <button onclick="setPoint('闲',5)">5</button>
-      <button onclick="setPoint('闲',6)">6</button><br>
-      <button onclick="setPoint('闲',7)">7</button>
-      <button onclick="setPoint('闲',8)">8</button>
-      <button onclick="setPoint('闲',9)">9</button><br>
-      <button onclick="setPoint('闲',0)">0</button>
+      <button class="num-btn" onclick="setPoint('闲',1,this)">1</button>
+      <button class="num-btn" onclick="setPoint('闲',2,this)">2</button>
+      <button class="num-btn" onclick="setPoint('闲',3,this)">3</button><br>
+      <button class="num-btn" onclick="setPoint('闲',4,this)">4</button>
+      <button class="num-btn" onclick="setPoint('闲',5,this)">5</button>
+      <button class="num-btn" onclick="setPoint('闲',6,this)">6</button><br>
+      <button class="num-btn" onclick="setPoint('闲',7,this)">7</button>
+      <button class="num-btn" onclick="setPoint('闲',8,this)">8</button>
+      <button class="num-btn" onclick="setPoint('闲',9,this)">9</button><br>
+      <button class="num-btn" onclick="setPoint('闲',0,this)">0</button>
     </div>
     <div class="btn player card">闲牌数</div>
-    <button onclick="setCard('闲',2)">2</button>
-    <button onclick="setCard('闲',3)">3</button>
+    <button class="num-btn" onclick="setCard('闲',2,this)">2</button>
+    <button class="num-btn" onclick="setCard('闲',3,this)">3</button>
   </div>
 
   <div class="column">
     <div class="btn banker">庄家</div>
     <div id="bankerPoints">
-      <button onclick="setPoint('庄',1)">1</button>
-      <button onclick="setPoint('庄',2)">2</button>
-      <button onclick="setPoint('庄',3)">3</button><br>
-      <button onclick="setPoint('庄',4)">4</button>
-      <button onclick="setPoint('庄',5)">5</button>
-      <button onclick="setPoint('庄',6)">6</button><br>
-      <button onclick="setPoint('庄',7)">7</button>
-      <button onclick="setPoint('庄',8)">8</button>
-      <button onclick="setPoint('庄',9)">9</button><br>
-      <button onclick="setPoint('庄',0)">0</button>
+      <button class="num-btn" onclick="setPoint('庄',1,this)">1</button>
+      <button class="num-btn" onclick="setPoint('庄',2,this)">2</button>
+      <button class="num-btn" onclick="setPoint('庄',3,this)">3</button><br>
+      <button class="num-btn" onclick="setPoint('庄',4,this)">4</button>
+      <button class="num-btn" onclick="setPoint('庄',5,this)">5</button>
+      <button class="num-btn" onclick="setPoint('庄',6,this)">6</button><br>
+      <button class="num-btn" onclick="setPoint('庄',7,this)">7</button>
+      <button class="num-btn" onclick="setPoint('庄',8,this)">8</button>
+      <button class="num-btn" onclick="setPoint('庄',9,this)">9</button><br>
+      <button class="num-btn" onclick="setPoint('庄',0,this)">0</button>
     </div>
     <div class="btn banker card">庄牌数</div>
-    <button onclick="setCard('庄',2)">2</button>
-    <button onclick="setCard('庄',3)">3</button>
+    <button class="num-btn" onclick="setCard('庄',2,this)">2</button>
+    <button class="num-btn" onclick="setCard('庄',3,this)">3</button>
   </div>
 </div>
 
@@ -82,14 +91,22 @@
 <script>
 let rounds=[],current={闲:null,庄:null,闲牌:2,庄牌:2};
 
-function setPoint(side,point){current[side]=point;}
-function setCard(side,card){current[side+'牌']=card;}
+function setPoint(side,num,btn){
+  current[side]=num;
+  [...btn.parentNode.children].forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setCard(side,num,btn){
+  current[side+'牌']=num;
+  [...btn.parentNode.children].forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
 function addRound(){
   if(current.闲==null||current.庄==null)return alert("请选择庄闲点数");
-  rounds.push({...current, winner: current.庄>current.闲?'庄':(current.庄<current.闲?'闲':'和')});
-  analyze();
-  current={闲:null,庄:null,闲牌:2,庄牌:2};
+  rounds.push({...current,winner:current.庄>current.闲?'庄':(current.庄<current.闲?'闲':'和')});
+  analyze(); current={闲:null,庄:null,闲牌:2,庄牌:2};
+  document.querySelectorAll('.num-btn').forEach(b=>b.classList.remove('active'));
 }
 
 function undo(){ rounds.pop(); analyze(); }
@@ -105,22 +122,22 @@ function analyze(){
   });
   let rate=((hits/(rounds.length-1))*100||0).toFixed(1);
   document.getElementById('history').innerHTML=html;
-  document.getElementById('suggestion').innerHTML=`下一局建议: <span class="${predict(rounds.length)=='庄'?'result-banker':'result-player'}">${predict(rounds.length)}</span> <br> 分析: ${rounds.length-1}局, 命中:${hits}局, 胜率:${rate}%`;
+  let sug=predict(rounds.length);
+  document.getElementById('suggestion').innerHTML=`下一局建议: <span class="suggestion ${sug=='庄'?'banker':'player'}">${sug}</span><br>分析: ${rounds.length-1}局, 命中:${hits}局, 胜率:${rate}%`;
 }
 
 function predict(i){
-  if(i<1)return '观望';
+  if(i<1)return'观望';
   let last=rounds[i-1],diff=last.庄-last.闲,streak=streakCount(i-1,last.winner);
-  if(last.winner=='庄'&&streak>=3&&diff>=3)return'庄(R1)';
-  if(i>=2&&rounds[i-2].winner=='闲'&&last.winner=='庄'&&Math.abs(diff)<=2)return'闲(R2)';
-  if(streak<=2&&Math.abs(diff)<=1)return last.winner=='庄'?'闲(R3)':'庄(R3)';
+  if(last.winner=='庄'&&streak>=3&&diff>=3)return'庄';
+  if(i>=2&&rounds[i-2].winner=='闲'&&last.winner=='庄'&&Math.abs(diff)<=2)return'闲';
+  if(streak<=2&&Math.abs(diff)<=1)return last.winner=='庄'?'闲':'庄';
   return '观望';
 }
 
 function streakCount(i,winner){
   let c=0;for(let j=i;j>=0;j--)if(rounds[j].winner==winner)c++;else break;return c;
 }
-
 analyze();
 </script>
 
