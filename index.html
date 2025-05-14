@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+# 生成完全符合截图布局 + 预测统计修复 + 最新AI算法逻辑 的 HTML 页面代码
+code = """<!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
@@ -6,76 +7,88 @@
   <title>百家乐玄武三式打法</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; padding: 10px; background: #fff; }
-    h1 { font-size: 24px; margin-bottom: 15px; }
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
-      margin: 4px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-    }
-    .num-btn { background: #eee; }
-    .num-btn.active { background: #333; color: white; }
-    .player { background-color: #0000ff; color: white; }
-    .banker { background-color: #ff0000; color: white; }
-    .tie { background-color: #00cccc; color: white; }
+    h1 { font-size: 24px; margin: 20px 0; }
+    .title { margin-bottom: 20px; }
+    .section { margin-bottom: 12px; }
+    .row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+    .btn { padding: 8px 14px; font-size: 16px; border-radius: 6px; border: none; cursor: pointer; }
+    .blue { background-color: #0000ff; color: white; }
+    .red { background-color: #ff0000; color: white; }
+    .gray { background-color: #ccc; color: black; }
     .green { background-color: green; color: white; }
-    .blue { background-color: #3399ff; color: white; }
-    .red { background-color: #e74c3c; color: white; }
-    .tag { padding: 3px 6px; border-radius: 5px; color: white; }
-    .tag-zhuang { background-color: #ff0000; }
-    .tag-xian { background-color: #0000ff; }
-    .tag-he { background-color: #00cccc; }
-    #history { text-align: left; max-width: 400px; margin: 20px auto; font-size: 14px; }
-    #suggestion { margin-top: 20px; font-size: 18px; }
+    .lightblue { background-color: #3498db; color: white; }
+    .danger { background-color: #e74c3c; color: white; }
+    .active { background-color: #333 !important; color: white !important; }
+    .tag { padding: 2px 6px; border-radius: 4px; color: white; }
+    .tag-庄 { background-color: #ff0000; }
+    .tag-闲 { background-color: #0000ff; }
+    .tag-和 { background-color: #00cccc; }
+    .history, .suggestion { max-width: 400px; margin: 10px auto; text-align: left; font-size: 15px; }
   </style>
 </head>
 <body>
-  <h1>百家乐玄武三式打法</h1>
 
-  <div>闲点数:</div>
-  <div id="xianPoints"></div>
-  <div>庄点数:</div>
-  <div id="zhuangPoints"></div>
+<h1>百家乐玄武三式打法</h1>
 
-  <div>闲牌数:
-    <button class="num-btn" onclick="setCard('闲',2,this)">2</button>
-    <button class="num-btn" onclick="setCard('闲',3,this)">3</button>
+<div class="section">
+  <div class="btn blue">PLAYER</div>
+  <div class="row" id="xianPoints"></div>
+</div>
+<div class="section">
+  <div class="btn red">BANKER</div>
+  <div class="row" id="zhuangPoints"></div>
+</div>
+
+<div class="section">
+  <div class="row">
+    <div class="btn blue">闲牌数</div>
+    <button class="btn gray" onclick="setCard('闲',2,this)">2</button>
+    <button class="btn gray" onclick="setCard('闲',3,this)">3</button>
+    <div class="btn red">庄牌数</div>
+    <button class="btn gray" onclick="setCard('庄',2,this)">2</button>
+    <button class="btn gray" onclick="setCard('庄',3,this)">3</button>
   </div>
-  <div>庄牌数:
-    <button class="num-btn" onclick="setCard('庄',2,this)">2</button>
-    <button class="num-btn" onclick="setCard('庄',3,this)">3</button>
-  </div>
+</div>
 
-  <div style="margin-top: 10px;">
-    <button class="green" onclick="addRound()">添加本局</button>
-    <button class="blue" onclick="undo()">撤销上局</button>
-    <button class="red" onclick="resetAll()">清空重置</button>
-  </div>
+<div class="section row">
+  <button class="btn green" onclick="addRound()">添加本局</button>
+  <button class="btn lightblue" onclick="undo()">撤销上局</button>
+  <button class="btn danger" onclick="resetAll()">清空重置</button>
+</div>
 
-  <div id="suggestion"></div>
-  <div id="history"></div>
+<div class="suggestion" id="suggestion"></div>
+<div class="history" id="history"></div>
 
 <script>
-let history = [], total = 0, hits = 0, current = { 闲: null, 庄: null, 闲牌: 2, 庄牌: 2 };
+let current = { 闲: null, 庄: null, 闲牌: 2, 庄牌: 2 }, history = [];
 
-function setupButtons() {
-  for (let side of ['xian', 'zhuang']) {
-    const container = document.getElementById(side + 'Points');
-    for (let i = 0; i <= 9; i++) {
-      let btn = document.createElement("button");
-      btn.textContent = i;
-      btn.className = "num-btn";
-      btn.onclick = () => setPoint(side === 'xian' ? '闲' : '庄', i, btn, side);
-      container.appendChild(btn);
-    }
+function buildButtons() {
+  const xian = document.getElementById("xianPoints");
+  const zhuang = document.getElementById("zhuangPoints");
+  for (let i = 1; i <= 9; i++) {
+    let bx = document.createElement("button");
+    bx.className = "btn gray";
+    bx.textContent = i;
+    bx.onclick = () => setPoint('闲', i, bx);
+    xian.appendChild(bx);
+    let bz = document.createElement("button");
+    bz.className = "btn gray";
+    bz.textContent = i;
+    bz.onclick = () => setPoint('庄', i, bz);
+    zhuang.appendChild(bz);
   }
+  ['闲', '庄'].forEach(side => {
+    let btn0 = document.createElement("button");
+    btn0.className = "btn gray";
+    btn0.textContent = "0";
+    btn0.onclick = () => setPoint(side, 0, btn0);
+    document.getElementById(side + 'Points').appendChild(btn0);
+  });
 }
 
-function setPoint(side, val, btn, group) {
+function setPoint(side, val, btn) {
   current[side] = val;
-  document.querySelectorAll(`#${group}Points .num-btn`).forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`#${side}Points .btn`).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -86,21 +99,18 @@ function setCard(side, val, btn) {
 }
 
 function addRound() {
-  if (current.闲 == null || current.庄 == null) {
-    alert("请选择完整点数");
-    return;
-  }
-  const winner = current.庄 > current.闲 ? '庄' : (current.庄 < current.闲 ? '闲' : '和');
+  if (current.闲 == null || current.庄 == null) return alert("请先选择庄闲点数！");
+  const winner = current.庄 > current.闲 ? '庄' : current.庄 < current.闲 ? '闲' : '和';
   const pred = predict();
   history.push({ ...current, 胜方: winner, 预测: pred.下注, 策略: pred.策略, 命中: winner === pred.下注 });
   alert("✅ 添加成功！");
-  update();
   current = { 闲: null, 庄: null, 闲牌: 2, 庄牌: 2 };
-  document.querySelectorAll('.num-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll(".btn").forEach(b => b.classList.remove('active'));
+  update();
 }
 
 function undo() {
-  if (confirm("是否撤销上一局？")) {
+  if (confirm("确认撤销上一局？")) {
     history.pop();
     update();
   }
@@ -113,21 +123,6 @@ function resetAll() {
   }
 }
 
-function predict() {
-  if (history.length < 1) return { 下注: '观望', 策略: '-', 胜率: 50 };
-  const last = history[history.length - 1];
-  const diff = last.庄 - last.闲;
-  const streak = getStreak(last.胜方);
-
-  if (last.胜方 === '庄' && streak >= 3 && diff >= 3) return { 下注: '庄', 策略: 'R1', 胜率: 86.2 };
-  if (history.length >= 2 && history[history.length - 2].胜方 === '闲' && last.胜方 === '庄' && Math.abs(diff) <= 2)
-    return { 下注: '闲', 策略: 'R2', 胜率: 82.5 };
-  if (streak <= 2 && Math.abs(diff) <= 1)
-    return { 下注: last.胜方 === '庄' ? '闲' : '庄', 策略: 'R3', 胜率: 79.4 };
-
-  return { 下注: '观望', 策略: '-', 胜率: 50 };
-}
-
 function getStreak(winner) {
   let c = 0;
   for (let i = history.length - 1; i >= 0; i--) {
@@ -137,23 +132,44 @@ function getStreak(winner) {
   return c;
 }
 
+function predict() {
+  if (history.length < 1) return { 下注: '观望', 策略: '-', 胜率: 0 };
+  const last = history[history.length - 1];
+  const diff = last.庄 - last.闲;
+  const streak = getStreak(last.胜方);
+
+  if (last.胜方 === '庄' && streak >= 3 && diff >= 3) return { 下注: '庄', 策略: 'R1' };
+  if (history.length >= 2 && history[history.length - 2].胜方 === '闲' && last.胜方 === '庄' && Math.abs(diff) <= 2)
+    return { 下注: '闲', 策略: 'R2' };
+  if (streak <= 2 && Math.abs(diff) <= 1)
+    return { 下注: last.胜方 === '庄' ? '闲' : '庄', 策略: 'R3' };
+  return { 下注: '观望', 策略: '-' };
+}
+
 function update() {
-  let html = "", hits = 0;
+  let html = "", hits = 0, valid = 0;
   history.forEach((h, i) => {
-    const pred = h.预测 === '观望' ? '观望' : `<span class="tag-${h.预测 === '庄' ? 'zhuang' : h.预测 === '闲' ? 'xian' : 'he'}">${h.预测}</span>`;
-    const real = `<span class="tag-${h.胜方 === '庄' ? 'zhuang' : h.胜方 === '闲' ? 'xian' : 'he'}">${h.胜方}</span>`;
-    const row = `局${i + 1}: 胜:${real} ｜ 庄:${h.庄} 闲:${h.闲}` + (h.预测 !== '观望' ? ` ｜ 预测:${pred} (${h.策略}) ${h.命中 ? "✔️" : "❌"}` : '');
-    html += row + "<br>";
-    if (h.命中) hits++;
+    const real = `<span class="tag tag-${h.胜方}">${h.胜方}</span>`;
+    const pred = h.预测 !== '观望' ? `<span class="tag tag-${h.预测}">${h.预测}</span>` : '观望';
+    const line = `局 ${i + 1} - 胜方:${real} ｜ 庄点:${h.庄}, 闲点:${h.闲}` +
+      (h.预测 !== '观望' ? ` ｜ 预测:${pred} (${h.策略}) ${h.命中 ? '✔️' : '❌'}` : '');
+    if (h.预测 !== '观望') valid++, h.命中 && hits++;
+    html += line + "<br>";
   });
-  const acc = history.length > 1 ? ((hits / (history.length - 1)) * 100).toFixed(1) : "0.0";
+  const acc = valid ? ((hits / valid) * 100).toFixed(1) : "0.0";
   const next = predict();
   document.getElementById("history").innerHTML = html;
   document.getElementById("suggestion").innerHTML =
-    `下一局建议: ${next.下注 === '观望' ? '观望' : `<span class="tag-${next.下注 === '庄' ? 'zhuang' : 'xian'}">${next.下注}</span>`}<br>分析: ${history.length - 1}局, 命中:${hits}局, 胜率:${acc}%`;
+    `下一局建议: ${next.下注 !== '观望' ? `<span class="tag tag-${next.下注}">${next.下注}</span>` : '观望'}<br>分析: ${valid}局, 命中: ${hits}局, 胜率: ${acc}%`;
 }
 
-setupButtons();
+buildButtons();
 </script>
 </body>
 </html>
+"""
+
+with open("/mnt/data/百家乐玄武三式打法_完整版.html", "w", encoding="utf-8") as f:
+    f.write(code)
+
+"/mnt/data/百家乐玄武三式打法_完整版.html"
