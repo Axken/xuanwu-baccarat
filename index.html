@@ -1,121 +1,37 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>百家乐玄武三式打法</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 10px;
-      margin: 0;
-      background: #fff;
-    }
-    h1 { font-size: 24px; margin-bottom: 20px; }
-    .title-row {
-      display: flex;
-      justify-content: center;
-      gap: 5%;
-      margin-bottom: 10px;
-    }
-    .title-btn {
-      flex: 1;
-      max-width: 180px;
-      padding: 12px 0;
-      font-size: 18px;
-      font-weight: bold;
-      color: white;
-      border-radius: 10px;
-      border: none;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; background: #fff; padding: 10px; margin: 0; }
+    h1 { font-size: 24px; margin: 20px 0 10px; }
+    .title-row { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; }
+    .title-btn { width: 130px; padding: 12px 0; font-size: 18px; font-weight: bold; color: white; border-radius: 10px; border: none; }
     .player-title { background-color: #0000ff; }
     .banker-title { background-color: #ff0000; }
-
-    .points-group {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 5%;
-      max-width: 500px;
-      margin: 0 auto 20px;
-    }
-    .point-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      width: 100%;
-      max-width: 180px;
-    }
-    .point-zero {
-      margin-top: 8px;
-    }
-
-    .num-btn {
-      padding: 12px 0;
-      font-size: 18px;
-      background: #eee;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 100%;
-    }
-    .num-btn.active {
-      background-color: #333;
-      color: white;
-    }
-
-    .card-row {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      align-items: center;
-      max-width: 500px;
-      margin: 10px auto;
-      gap: 20px;
-    }
-    .card-label {
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      color: white;
-      margin-bottom: 6px;
-    }
+    .points-group { display: flex; justify-content: space-around; max-width: 400px; margin: 0 auto 20px; }
+    .point-grid { display: grid; grid-template-columns: repeat(3, 60px); gap: 8px; }
+    .point-zero { margin-top: 8px; text-align: center; }
+    .num-btn { padding: 10px 0; width: 60px; font-size: 18px; background: #eee; border: none; border-radius: 6px; cursor: pointer; }
+    .num-btn.active { background-color: #333; color: white; }
+    .card-row { display: flex; justify-content: space-around; align-items: center; max-width: 400px; margin: 20px auto; }
+    .card-label { padding: 8px 16px; border-radius: 6px; font-weight: bold; color: white; }
+    .card-btns { display: flex; gap: 10px; }
     .blue { background-color: #0000ff; }
     .red { background-color: #ff0000; }
-
-    .card-btns {
-      display: flex;
-      gap: 10px;
-    }
-    .control-row {
-      display: flex;
-      justify-content: space-between;
-      max-width: 500px;
-      margin: 20px auto;
-      gap: 10px;
-    }
-    .ctrl-btn {
-      flex: 1;
-      padding: 12px 0;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .gray { background-color: #ccc; color: black; }
+    .control-row { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+    .ctrl-btn { padding: 12px 24px; font-size: 16px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
     .green { background-color: green; }
     .blue-btn { background-color: #3498db; }
     .red-btn { background-color: #e74c3c; }
-
-    @media (max-width: 480px) {
-      .point-grid { max-width: 100%; }
-      .card-row { flex-direction: column; gap: 10px; }
-      .control-row { flex-direction: column; gap: 12px; }
-    }
+    .tag { padding: 3px 6px; border-radius: 4px; color: white; font-weight: bold; }
+    .tag-庄 { background-color: #ff0000; }
+    .tag-闲 { background-color: #0000ff; }
+    .tag-和 { background-color: #00cccc; }
+    .suggestion, .history { max-width: 500px; margin: 20px auto; font-size: 16px; text-align: left; }
   </style>
 </head>
 <body>
@@ -156,35 +72,108 @@
 </div>
 
 <div class="control-row">
-  <button class="ctrl-btn green">添加本局</button>
-  <button class="ctrl-btn blue-btn">撤销上局</button>
-  <button class="ctrl-btn red-btn">清空重置</button>
+  <button class="ctrl-btn green" onclick="addRound()">添加本局</button>
+  <button class="ctrl-btn blue-btn" onclick="undo()">撤销上局</button>
+  <button class="ctrl-btn red-btn" onclick="resetAll()">清空重置</button>
 </div>
 
+<div class="suggestion" id="suggestion"></div>
+<div class="history" id="history"></div>
+
 <script>
-function setPoint(side, val, btn) {
-  const group = side === '闲' ? 'xianPoints' : 'zhuangPoints';
-  document.querySelectorAll(`#${group} .num-btn`).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-function setCard(side, val, btn) {
-  document.querySelectorAll(`button[onclick*="setCard('${side}'"]`).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
+let history = [], current = { 闲: null, 庄: null, 闲牌: 2, 庄牌: 2 };
+
 function buildPoints() {
   ['xian','zhuang'].forEach(side => {
-    const container = document.getElementById(side + 'Points');
+    const div = document.getElementById(side + 'Points');
     for (let i = 1; i <= 9; i++) {
-      const btn = document.createElement('button');
+      let btn = document.createElement("button");
       btn.textContent = i;
-      btn.className = 'num-btn';
+      btn.className = "num-btn";
       btn.onclick = () => setPoint(side==='xian'?'闲':'庄', i, btn);
-      container.appendChild(btn);
+      div.appendChild(btn);
     }
   });
 }
 buildPoints();
-</script>
 
+function setPoint(side, val, btn) {
+  current[side] = val;
+  const group = side === '闲' ? 'xianPoints' : 'zhuangPoints';
+  document.querySelectorAll(`#${group} .num-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setCard(side, val, btn) {
+  current[side + '牌'] = val;
+  document.querySelectorAll(`button[onclick*="setCard('${side}'"]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function addRound() {
+  if (current.闲 == null || current.庄 == null) return alert("请先选择点数");
+  const winner = current.庄 > current.闲 ? '庄' : current.庄 < current.闲 ? '闲' : '和';
+  const pred = predict();
+  history.push({ ...current, 胜方: winner, 预测: pred.下注, 策略: pred.策略, 命中: winner === pred.下注 });
+  alert("✅ 本局已添加");
+  current = { 闲: null, 庄: null, 闲牌: 2, 庄牌: 2 };
+  document.querySelectorAll('.num-btn').forEach(btn => btn.classList.remove('active'));
+  update();
+}
+
+function undo() {
+  if (confirm("确认撤销上一局？")) {
+    history.pop();
+    update();
+  }
+}
+
+function resetAll() {
+  if (confirm("确认清空所有记录？")) {
+    history = [];
+    update();
+  }
+}
+
+function getStreak(winner) {
+  let c = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].胜方 === winner) c++; else break;
+  }
+  return c;
+}
+
+function predict() {
+  if (history.length < 1) return { 下注: '观望', 策略: '-' };
+  const last = history[history.length - 1];
+  const diff = last.庄 - last.闲;
+  const streak = getStreak(last.胜方);
+  if (last.胜方 === '庄' && streak >= 3 && diff >= 3) return { 下注: '庄', 策略: 'R1' };
+  if (history.length >= 2 && history[history.length - 2].胜方 === '闲' && last.胜方 === '庄' && Math.abs(diff) <= 2)
+    return { 下注: '闲', 策略: 'R2' };
+  if (streak <= 2 && Math.abs(diff) <= 1)
+    return { 下注: last.胜方 === '庄' ? '闲' : '庄', 策略: 'R3' };
+  return { 下注: '观望', 策略: '-' };
+}
+
+function update() {
+  let hits = 0, valid = 0, html = "";
+  history.forEach((h, i) => {
+    const real = `<span class="tag tag-${h.胜方}">${h.胜方}</span>`;
+    const pred = h.预测 !== '观望' ? `<span class="tag tag-${h.预测}">${h.预测}</span>` : '观望';
+    let row = `局 ${i+1} - 胜方:${real} ｜ 庄:${h.庄}, 闲:${h.闲}`;
+    if (h.预测 !== '观望') {
+      row += ` ｜ 预测:${pred} (${h.策略}) ${h.命中 ? '✔️' : '❌'}`;
+      valid++; if (h.命中) hits++;
+    }
+    html += row + "<br>";
+  });
+  const acc = valid ? ((hits / valid) * 100).toFixed(1) : "0.0";
+  const next = predict();
+  const nextView = next.下注 !== '观望' ? `<span class="tag tag-${next.下注}">${next.下注}</span>` : '观望';
+  document.getElementById('history').innerHTML = html;
+  document.getElementById('suggestion').innerHTML = `下一局建议: ${nextView}<br>分析: ${valid}局, 命中: ${hits}局, 胜率: ${acc}%`;
+}
+</script>
 </body>
 </html>
