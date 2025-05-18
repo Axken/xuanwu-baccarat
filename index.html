@@ -146,11 +146,36 @@
       document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
     }
 
+    function predictNext() {
+      const h = history;
+      if (h.length < 2) return '';
+      const l = h.at(-1), s = h.at(-2);
+      if (l.胜 === '和') return '';
+
+      const diffL = Math.abs(l.庄 - l.闲);
+      const diffS = Math.abs(s.庄 - s.闲);
+
+      if (l.胜 === s.胜 && (diffL >= 3 || diffS >= 3)) return l.胜;
+      if (diffL <= 2) return l.胜 === '庄' ? '闲' : '庄';
+      return '';
+    }
+
     function addOnly() {
       if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
       const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
       history.push({...selected, 胜});
       predictions.push('');
+      selected = {庄: null, 闲: null};
+      updateUI(); clearSelection();
+    }
+
+    function addAndAnalyze() {
+      if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
+      const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
+      const current = {...selected, 胜};
+      const predicted = predictNext();
+      history.push(current);
+      predictions.push(predicted);
       selected = {庄: null, 闲: null};
       updateUI(); clearSelection();
     }
@@ -237,15 +262,16 @@
       }
       document.getElementById('history').innerHTML = grouped.join('');
       document.getElementById('trend').innerHTML = generateDaLuTrend(history);
-    }
 
-    function addAndAnalyze() {
-      if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
-      const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
-      history.push({...selected, 胜});
-      predictions.push('');
-      selected = {庄: null, 闲: null};
-      updateUI(); clearSelection();
+      const valid = predictions.map((p, i) => ({ p, i })).filter(({ p, i }) => p && (history[i].胜 === '庄' || history[i].胜 === '闲'));
+      const correct = valid.filter(({ p, i }) => p === history[i].胜).length;
+      const total = valid.length;
+      const rate = total ? ((correct / total) * 100).toFixed(1) : '0';
+
+      document.getElementById('ai-result').innerHTML = total ? `预测建议：<span class='text-${predictions.at(-1) === '庄' ? 'z' : 'x'}'>${predictions.at(-1)}</span>` : '（暂无建议）';
+      document.getElementById('ai-stat').innerHTML = total ? `共分析 ${total} 局，命中 ${correct} 局` : '（暂无统计数据）';
+      document.getElementById('summary').innerHTML = total ? `当前命中率：<strong>${rate}%</strong>` : '（请先输入数据）';
+      document.getElementById('hit-stat').textContent = `已分析 ${total} 局，命中 ${correct} 局，命中率：${rate}%`;
     }
 
     window.onload = () => createButtons();
