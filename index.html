@@ -22,6 +22,8 @@
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 1rem;
+      z-index: 10;
+      position: relative;
     }
     .bottom-btns button { min-width: 70px; font-size: 14px; }
     .history-entry {
@@ -78,6 +80,10 @@
     .summary-inline div strong { display: inline-block; width: 8rem; }
     .text-z { color: red; font-weight: bold; }
     .text-x { color: blue; font-weight: bold; }
+    .text-h { color: teal; font-weight: bold; }
+    .btn-zhuang { background-color: red; color: white; }
+    .btn-xian { background-color: blue; color: white; }
+    .btn-he { background-color: teal; color: white; }
   </style>
 </head>
 <body>
@@ -102,10 +108,10 @@
   </div>
 
   <div class="summary-inline">
-    <div><strong>策略逻辑建议：</strong><span id="ai-result">(暂无建议)</span></div>
-    <div><strong>大数据胜率分析：</strong><span id="ai-stat">(暂无统计数据)</span></div>
-    <div><strong>综合下注建议：</strong><span id="summary">(请先输入数据)</span></div>
-    <div id="hit-stat">(命中率待生成)</div>
+    <div><strong>策略逻辑建议：</strong><span id="ai-result"><span class="text-muted">（暂无建议）</span></span></div>
+    <div><strong>大数据胜率分析：</strong><span id="ai-stat"><span class="text-muted">（暂无统计数据）</span></span></div>
+    <div><strong>综合下注建议：</strong><span id="summary"><span class="text-muted">（请先输入数据）</span></span></div>
+    <div id="hit-stat">（命中率待生成）</div>
   </div>
 
   <div id="history" class="my-2"></div>
@@ -220,7 +226,8 @@
 
     function updateUI() {
       const historyHTML = history.map((h, i) => {
-        return `<div class='history-entry'><span>局${i+1}</span><span class="${h.胜==='庄'?'btn-danger':h.胜==='闲'?'btn-primary':'btn-info'} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
+        const cls = h.胜 === '庄' ? 'btn-zhuang' : h.胜 === '闲' ? 'btn-xian' : 'btn-he';
+        return `<div class='history-entry'><span>局${i+1}</span><span class="${cls} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
       });
       const grouped = [];
       for (let i = 0; i < historyHTML.length; i++) {
@@ -230,6 +237,15 @@
       }
       document.getElementById('history').innerHTML = grouped.join('');
       document.getElementById('trend').innerHTML = generateDaLuTrend(history);
+    }
+
+    function addAndAnalyze() {
+      if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
+      const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
+      history.push({...selected, 胜});
+      predictions.push('');
+      selected = {庄: null, 闲: null};
+      updateUI(); clearSelection();
     }
 
     window.onload = () => createButtons();
