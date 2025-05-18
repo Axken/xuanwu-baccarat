@@ -175,36 +175,45 @@
 
     function generateDaLuTrendStructure(history) {
       const maxRow = 6, grid = [];
-      let col = 0, row = 0, prev = null;
+      let col = -1, row = 0, prev = null;
+
       for (let i = 0; i < history.length; i++) {
         const t = history[i].胜;
         if (t === '和') continue;
-        if (t === prev) {
-          if (!grid[col]) grid[col] = [];
-          if (row < maxRow - 1 && !grid[col][row + 1]) row++; else { col++; row = prevRow; }
-        } else { col++; row = 0; }
+
+        if (t === prev && row < maxRow - 1 && (!grid[col] || !grid[col][row + 1])) {
+          row++;
+        } else {
+          col++;
+          row = 0;
+        }
+
         if (!grid[col]) grid[col] = [];
         grid[col][row] = t;
         prev = t;
-        prevRow = row;
       }
+
       return grid.slice(-5).map(c => c.filter(Boolean));
     }
 
     function generateDaLuTrend(history) {
       const maxRow = 6, grid = [];
-      let col = 0, row = 0, prev = null, prevRow = 0;
+      let col = -1, row = 0, prev = null;
+
       for (let i = 0; i < history.length; i++) {
         const t = history[i].胜;
         if (t === '和') continue;
-        if (t === prev) {
-          if (!grid[col]) grid[col] = [];
-          if (row < maxRow - 1 && !grid[col][row + 1]) row++; else { col++; row = prevRow; }
-        } else { col++; row = 0; }
+
+        if (t === prev && row < maxRow - 1 && (!grid[col] || !grid[col][row + 1])) {
+          row++;
+        } else {
+          col++;
+          row = 0;
+        }
+
         if (!grid[col]) grid[col] = [];
         grid[col][row] = t;
         prev = t;
-        prevRow = row;
       }
 
       let html = `<div style="display:flex; gap:4px;">`;
