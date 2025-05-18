@@ -53,6 +53,18 @@
       font-weight: bold;
       text-align: center;
       color: white;
+      position: relative;
+    }
+    .tie-line::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background-color: limegreen;
+      top: 50%;
+      left: 0;
+      transform: rotate(45deg);
+      transform-origin: center;
     }
     .z { background: red; }
     .x { background: blue; }
@@ -202,20 +214,38 @@ function generateDaLuTrend(history) {
   for (let i = 0; i < history.length; i++) {
     const curr = history[i];
     const type = curr.胜;
-    let value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
+    const value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
+
+    let tie = false;
+    if (type === '和') {
+      if (trendMap.length > 0) trendMap.at(-1).tie = true;
+      continue;
+    }
 
     const prev = trendMap.at(-1);
-    const same = prev && prev.type === type && type !== '和';
+    const same = prev && prev.type === type;
 
-    if (type === '和') { col++; row = 0; }
-    else if (!same) { col++; row = 0; }
+    if (!same) { col++; row = 0; }
     else if (row + 1 < maxRow && !(grid[col]?.[row + 1])) { row++; }
     else { col++; row = 0; }
 
     if (!grid[col]) grid[col] = [];
-    grid[col][row] = { type, value };
+    grid[col][row] = { type, value, tie: false };
     trendMap.push({ col, row, type });
   }
+
+  // 标记和局位置
+  history.forEach((h, i) => {
+    if (h.胜 === '和' && i > 0) {
+      for (let c = 0; c < grid.length; c++) {
+        for (let r = 0; r < maxRow; r++) {
+          if (grid[c]?.[r] && (grid[c][r].value == history[i - 1].庄 || grid[c][r].value == history[i - 1].闲)) {
+            grid[c][r].tie = true;
+          }
+        }
+      }
+    }
+  });
 
   let html = `<div style="display:flex; gap:4px;">`;
   for (let c = 0; c < grid.length; c++) {
@@ -223,7 +253,7 @@ function generateDaLuTrend(history) {
     for (let r = 0; r < maxRow; r++) {
       const cell = grid[c]?.[r];
       if (cell) {
-        let cls = cell.type === '庄' ? 'z' : cell.type === '闲' ? 'x' : 'h';
+        const cls = `${cell.type === '庄' ? 'z' : cell.type === '闲' ? 'x' : 'h'}${cell.tie ? ' tie-line' : ''}`;
         html += `<div class="circle-small ${cls}">${cell.value}</div>`;
       } else {
         html += `<div style="width:20px;height:20px;"></div>`;
