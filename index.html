@@ -71,7 +71,6 @@
   </div>
   <div id="history" class="my-2"></div>
   <div id="trend" class="mt-3"></div>
-
 <script>
 let history = [], predictions = [], selected = {庄: null, 闲: null}, hitResults = [];
 
@@ -95,14 +94,6 @@ function createButtons() {
       wrap.appendChild(b);
     });
   });
-}
-
-function formatSide(s) {
-  return s === '庄' ? '<span class="text-z">庄</span>' : '<span class="text-x">闲</span>';
-}
-
-function clearSelection() {
-  document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
 }
 
 function addOnly() {
@@ -139,14 +130,14 @@ function predictNext() {
   }
   if (s && l.胜 === s.胜 && s.胜 !== '和' && (l.差 >= 3 || s.差 >= 3)) {
     p = l.胜;
-    document.getElementById('ai-result').innerHTML = `上局为 ${formatSide(l.胜)} 连胜且大点差，建议继续追 ${formatSide(l.胜)}`;
-    document.getElementById('ai-stat').innerHTML = `${formatSide('庄')} 胜率 58% ／ ${formatSide('闲')} 胜率 42%`;
-    updateSummary(p, '庄');
+    document.getElementById('ai-result').innerHTML = `上局为 <span class="text-${p === '庄' ? 'z' : 'x'}">${p}</span> 连胜且大点差，建议继续追 <span class="text-${p === '庄' ? 'z' : 'x'}">${p}</span>`;
+    document.getElementById('ai-stat').innerHTML = `<span class="text-z">庄</span> 胜率 58% ／ <span class="text-x">闲</span> 胜率 42%`;
+    document.getElementById('summary').innerHTML = `✅ 策略与胜率一致，推荐下注 <span class="text-${p === '庄' ? 'z' : 'x'}">${p}</span>`;
   } else if (l.差 <= 2) {
     p = l.胜 === '庄' ? '闲' : '庄';
-    document.getElementById('ai-result').innerHTML = `上局为 ${formatSide(l.胜)} 弱胜，建议反打 ${formatSide(p)}`;
-    document.getElementById('ai-stat').innerHTML = `${formatSide('庄')} 胜率 55% ／ ${formatSide('闲')} 胜率 45%`;
-    updateSummary(p, '庄');
+    document.getElementById('ai-result').innerHTML = `上局为 <span class="text-${l.胜 === '庄' ? 'z' : 'x'}">${l.胜}</span> 弱胜，建议反打 <span class="text-${p === '庄' ? 'z' : 'x'}">${p}</span>`;
+    document.getElementById('ai-stat').innerHTML = `<span class="text-z">庄</span> 胜率 55% ／ <span class="text-x">闲</span> 胜率 45%`;
+    document.getElementById('summary').innerHTML = `✅ 策略与胜率一致，推荐下注 <span class="text-${p === '庄' ? 'z' : 'x'}">${p}</span>`;
   } else {
     document.getElementById('ai-result').textContent = '无明显趋势，建议观望';
     document.getElementById('ai-stat').textContent = '当前走势匹配数据较少';
@@ -156,12 +147,40 @@ function predictNext() {
   return p;
 }
 
-function updateSummary(predicted, top) {
-  if (!predicted || predicted !== top) {
-    document.getElementById('summary').innerHTML = '建议观望';
-    return;
+function undo() {
+  history.pop(); predictions.pop(); hitResults.pop();
+  updateUI();
+}
+
+function resetAll() {
+  if (confirm('确认清空？')) {
+    history = []; predictions = []; hitResults = [];
+    updateUI();
   }
-  document.getElementById('summary').innerHTML = `✅ 策略与胜率一致，推荐下注 ${formatSide(predicted)}`;
+}
+
+function clearSelection() {
+  document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function updateUI() {
+  updateHitStats();
+
+  const historyHTML = history.map((h, i) => {
+    let bg = '';
+    if (hitResults[i] === true) bg = 'background-color:#e0f7f1;';
+    if (hitResults[i] === false) bg = 'background-color:#fde8e8;';
+    return `<div class='history-entry' style='${bg}'><span>局${i+1}</span><span class="${h.胜==='庄'?'btn-zhuang':h.胜==='闲'?'btn-xian':'btn-he'} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
+  });
+
+  const grouped = [];
+  for (let i = 0; i < historyHTML.length; i++) {
+    if (i % 3 === 0) grouped.push(`<div class='history-row-group w-100'>`);
+    grouped.push(historyHTML[i]);
+    if (i % 3 === 2 || i === historyHTML.length - 1) grouped.push(`</div>`);
+  }
+  document.getElementById('history').innerHTML = grouped.join('');
+  document.getElementById('trend').innerHTML = generateDaLuTrend(history);
 }
 
 function updateHitStats() {
@@ -182,29 +201,12 @@ function updateHitStats() {
   document.getElementById('hit-stat').textContent = `已分析 ${total} 局，命中 ${correct} 局，命中率：${rate}%`;
 }
 
-function updateUI() {
-  updateHitStats();
-  const historyHTML = history.map((h, i) => {
-    let bg = '';
-    if (hitResults[i] === true) bg = 'background-color:#e0f7f1;';
-    if (hitResults[i] === false) bg = 'background-color:#fde8e8;';
-    return `<div class='history-entry' style='${bg}'><span>局${i+1}</span><span class="${h.胜==='庄'?'btn-zhuang':h.胜==='闲'?'btn-xian':'btn-he'} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
-  });
-
-  const grouped = [];
-  for (let i = 0; i < historyHTML.length; i++) {
-    if (i % 3 === 0) grouped.push(`<div class='history-row-group w-100'>`);
-    grouped.push(historyHTML[i]);
-    if (i % 3 === 2 || i === historyHTML.length - 1) grouped.push(`</div>`);
-  }
-  document.getElementById('history').innerHTML = grouped.join('');
-  document.getElementById('trend').innerHTML = generateDaLuTrend(history);
-}
-
 function generateDaLuTrend(history) {
   const maxRow = 6;
   let grid = [], trendMap = [];
-  let col = -1, row = 0;
+  let col = 0, row = 0;
+  let prevType = null;
+  let prevCol = 0, prevRow = 0;
 
   for (let i = 0; i < history.length; i++) {
     const curr = history[i];
@@ -212,23 +214,29 @@ function generateDaLuTrend(history) {
     const value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
 
     if (type === '和') {
-      trendMap.push({ col: -1, row: -1, type: '和', tieTo: [...trendMap].reverse().find(e => e.type !== '和') });
+      const last = trendMap.slice().reverse().find(e => e.type !== '和');
+      trendMap.push({ col: -1, row: -1, type: '和', tieTo: last });
       continue;
     }
 
-    let prevNonTie = [...trendMap].reverse().find(e => e.type !== '和');
-    const same = prevNonTie && prevNonTie.type === type;
-
-    if (!same) {
-      col++; row = 0;
+    if (type === prevType) {
+      if (row < maxRow - 1 && (!grid[col] || !grid[col][row + 1])) {
+        row++;
+      } else {
+        col++;
+        row = prevRow; // 横向展开保持行不变（L型）
+      }
     } else {
-      if (row >= maxRow - 1) { col++; row = 0; }
-      else { row++; }
+      col++;
+      row = 0;
     }
 
     if (!grid[col]) grid[col] = [];
     grid[col][row] = { type, value, tie: false };
     trendMap.push({ col, row, type });
+    prevType = type;
+    prevCol = col;
+    prevRow = row;
   }
 
   trendMap.forEach((entry) => {
@@ -246,7 +254,7 @@ function generateDaLuTrend(history) {
     for (let r = 0; r < maxRow; r++) {
       const cell = grid[c]?.[r];
       if (cell) {
-        const cls = `${cell.type === '庄' ? 'z' : cell.type === '闲' ? 'x' : 'h'}${cell.tie ? ' tie-line' : ''}`;
+        const cls = `${cell.type === '庄' ? 'z' : 'x'}${cell.tie ? ' tie-line' : ''}`;
         html += `<div class="circle-small ${cls}">${cell.value}</div>`;
       } else {
         html += `<div style="width:20px;height:20px;"></div>`;
@@ -256,18 +264,6 @@ function generateDaLuTrend(history) {
   }
   html += `</div>`;
   return html;
-}
-
-function undo() {
-  history.pop(); predictions.pop(); hitResults.pop();
-  updateUI();
-}
-
-function resetAll() {
-  if (confirm('确认清空？')) {
-    history = []; predictions = []; hitResults = [];
-    updateUI();
-  }
 }
 
 window.onload = () => createButtons();
