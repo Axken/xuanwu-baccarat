@@ -31,31 +31,14 @@
     .z { background: red; }
     .x { background: blue; }
     .h { background: teal; }
-    .summary-box {
-      background: white;
-      border: 1px solid #ccc;
-      padding: 1rem;
-      border-radius: 10px;
-      max-width: 500px;
-      margin: 1rem auto;
-      text-align: left;
-    }
-    .num-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 60px);
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
+    .text-z { color: red; font-weight: bold; }
+    .text-x { color: blue; font-weight: bold; }
+    .text-h { color: teal; font-weight: bold; }
     .selected { border: 3px solid gold !important; filter: brightness(85%); }
-    .btn-zhuang { background-color: red; color: white; }
-    .btn-xian { background-color: blue; color: white; }
-    .btn-he { background-color: teal; color: white; }
   </style>
 </head>
 <body>
   <h3>百家乐玄武三式打法</h3>
-
   <div class="row g-2 mb-2">
     <div class="col-6">
       <h5 class="btn-xian py-1 px-2 rounded">闲家点数</h5>
@@ -67,13 +50,6 @@
     </div>
   </div>
 
-  <div class="mb-3">
-    <button class="btn btn-secondary" onclick="addOnly()">添加</button>
-    <button class="btn btn-success" onclick="addAndAnalyze()">分析</button>
-    <button class="btn btn-warning" onclick="undo()">撤销</button>
-    <button class="btn btn-danger" onclick="resetAll()">重置</button>
-  </div>
-
   <div class="summary-box">
     <div><strong>策略逻辑建议：</strong><span id="ai-strategy">（暂无）</span></div>
     <div><strong>大数据胜率分析：</strong><span id="ai-winrate">（暂无）</span></div>
@@ -81,164 +57,165 @@
     <div><strong>命中统计：</strong><span id="ai-stat">（暂无）</span></div>
   </div>
 
+  <div class="mb-3">
+    <button class="btn btn-secondary" onclick="addOnly()">添加</button>
+    <button class="btn btn-success" onclick="addAndAnalyze()">分析</button>
+    <button class="btn btn-warning" onclick="undo()">撤销</button>
+    <button class="btn btn-danger" onclick="resetAll()">重置</button>
+  </div>
+
   <div id="trend" class="mt-3"></div>
 
-  <script>
-    const maxRow = 6;
-    let history = [], predictions = [], hits = 0;
-    let selected = {庄: null, 闲: null};
-    let lastBet = null;
-
-    function createButtons() {
-      const layout = ['1','2','3','4','5','6','7','8','9','','0',''];
-      ['闲','庄'].forEach(side => {
-        const wrap = document.getElementById((side === '庄' ? 'zhuang' : 'xian') + '-points');
-        wrap.innerHTML = '';
-        layout.forEach(v => {
-          const b = document.createElement('button');
-          b.className = 'btn btn-light';
-          if (v === '') { b.disabled = true; b.style.visibility = 'hidden'; }
-          else {
-            b.textContent = v;
-            b.onclick = () => {
-              selected[side] = parseInt(v);
-              [...wrap.children].forEach(x => x.classList.remove('selected'));
-              b.classList.add('selected');
-            };
-          }
-          wrap.appendChild(b);
-        });
+<script>
+  let selected = {庄: null, 闲: null};
+  function createButtons() {
+    const layout = ['1','2','3','4','5','6','7','8','9','','0',''];
+    ['闲','庄'].forEach(side => {
+      const wrap = document.getElementById((side === '庄' ? 'zhuang' : 'xian') + '-points');
+      wrap.innerHTML = '';
+      layout.forEach(v => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-light num-btn';
+        if (v === '') { b.disabled = true; b.style.visibility = 'hidden'; }
+        else {
+          b.textContent = v;
+          b.onclick = () => {
+            selected[side] = parseInt(v);
+            [...wrap.children].forEach(x => x.classList.remove('selected'));
+            b.classList.add('selected');
+          };
+        }
+        wrap.appendChild(b);
       });
-    }
+    });
+  }
 
-    function predictStrategy() {
-      const h = history;
-      if (h.length < 2) return '';
-      const l = h.at(-1), s = h.at(-2);
-      if (!l || !s || l.胜 === '和') return '';
-      const d1 = Math.abs(l.庄 - l.闲);
-      const d2 = Math.abs(s.庄 - s.闲);
-      if (l.胜 === s.胜 && (d1 >= 3 || d2 >= 3)) return l.胜;
-      if (d1 <= 2) return l.胜 === '庄' ? '闲' : '庄';
-      return '';
-    }
+  function clearSelection() {
+    document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+  }
 
-    function predictWinRate() {
-      const h = history;
-      const last = h.at(-1);
-      if (!last || last.胜 === '和') return '';
-      return last.庄 >= last.闲 ? '庄' : '闲';
-    }
+  function predictStrategy(last, secondLast) {
+    if (!last || !secondLast || last.胜 === '和') return '';
+    const diff1 = Math.abs(last.庄 - last.闲);
+    const diff2 = Math.abs(secondLast.庄 - secondLast.闲);
+    if (last.胜 === secondLast.胜 && (diff1 >= 3 || diff2 >= 3)) return last.胜;
+    if (diff1 <= 2) return last.胜 === '庄' ? '闲' : '庄';
+    return '';
+  }
 
-    function addOnly() {
-      if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
-      const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
-      const entry = { ...selected, 胜 };
-      if (lastBet && (entry.胜 === '庄' || entry.胜 === '闲')) {
-        if (lastBet === entry.胜) hits++;
+  function predictWinrate(last) {
+    if (!last || last.胜 === '和') return '';
+    return last.庄 >= last.闲 ? '庄' : '闲';
+  }
+
+  let history = [], predictions = [], hits = 0;
+  let lastBet = null;
+
+  function updateStats() {
+    const last = history.at(-1);
+    const secondLast = history.length > 1 ? history.at(-2) : null;
+    const strategy = predictStrategy(last, secondLast);
+    const winrate = predictWinrate(last);
+    let summary = '';
+    if (strategy && winrate && strategy === winrate) summary = strategy;
+    lastBet = summary || null;
+    predictions.push(summary);
+
+    const total = predictions.filter(p => p === '庄' || p === '闲').length;
+    const rate = total ? ((hits / total) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('ai-strategy').innerHTML = strategy ? `<span class="text-${strategy === '庄' ? 'z' : 'x'}">${strategy}</span>` : '（暂无）';
+    document.getElementById('ai-winrate').innerHTML = winrate ? `<span class="text-${winrate === '庄' ? 'z' : 'x'}">${winrate}（${winrate === '庄' ? '55%' : '45%'}）</span>` : '（暂无）';
+    document.getElementById('ai-summary').innerHTML = summary ? `<span class="text-${summary === '庄' ? 'z' : 'x'}">${summary}</span>` : '观望';
+    document.getElementById('ai-stat').innerHTML = `共分析 ${total} 局，命中 ${hits} 局，命中率：${rate}`;
+  }
+
+  function addOnly() {
+    if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
+    const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
+    const newRecord = {...selected, 胜};
+    if (lastBet && (胜 === '庄' || 胜 === '闲') && lastBet === 胜) hits++;
+    history.push(newRecord);
+    predictions.push('');
+    selected = {庄: null, 闲: null};
+    lastBet = null;
+    clearSelection();
+    updateStats();
+  }
+
+  function addAndAnalyze() {
+    if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
+    const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
+    history.push({...selected, 胜});
+    selected = {庄: null, 闲: null};
+    clearSelection();
+    updateStats();
+  }
+
+  function resetAll() {
+    if (confirm('确认清空？')) {
+      history = []; predictions = []; hits = 0; lastBet = null;
+      updateStats();
+    }
+  }
+
+  function undo() {
+    const removed = history.pop();
+    const pred = predictions.pop();
+    if (removed && pred && (removed.胜 === '庄' || removed.胜 === '闲') && pred === removed.胜) hits--;
+    lastBet = null;
+    updateStats();
+  }
+
+  function generateDaLuTrend(history) {
+    let grid = [], trendMap = [];
+    let col = -1, row = 0;
+    for (let i = 0; i < history.length; i++) {
+      const curr = history[i];
+      const type = curr.胜;
+      const value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
+      if (type === '和') {
+        if (trendMap.length > 0) {
+          const last = trendMap.at(-1);
+          if (!grid[last.col][last.row].tie) grid[last.col][last.row].tie = true;
+        }
+        continue;
       }
-      history.push(entry);
-      predictions.push('');
-      selected = {庄: null, 闲: null};
-      lastBet = null;
-      updateUI();
-    }
-
-    function addAndAnalyze() {
-      if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
-      const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
-      const entry = { ...selected, 胜 };
-      const strat = predictStrategy();
-      const win = predictWinRate();
-      let final = '';
-      if (strat && win && strat === win) final = strat;
-      history.push(entry);
-      predictions.push(final);
-      selected = {庄: null, 闲: null};
-      lastBet = final || null;
-      updateUI();
-    }
-
-    function resetAll() {
-      if (confirm('确认清空？')) {
-        history = []; predictions = []; hits = 0; lastBet = null;
-        updateUI();
-      }
-    }
-
-    function undo() {
-      const removed = history.pop();
-      if (removed && predictions.length && predictions.at(-1)) {
-        if (predictions.pop() === removed.胜) hits--;
+      const prev = trendMap.at(-1);
+      const same = prev && prev.type === type;
+      if (!same) {
+        col++;
+        while (grid[col] && grid[col][0]) col++;
+        row = 0;
+      } else if (row + 1 < 6 && !(grid[col]?.[row + 1])) {
+        row++;
       } else {
-        predictions.pop();
+        col++;
+        while (grid[col] && grid[col][0]) col++;
+        row = 0;
       }
-      lastBet = null;
-      updateUI();
+      if (!grid[col]) grid[col] = [];
+      grid[col][row] = { type, value, tie: false };
+      trendMap.push({ col, row, type });
     }
-
-    function generateDaLuTrend(history) {
-      let grid = [], trendMap = [];
-      let col = -1, row = 0;
-
-      for (let i = 0; i < history.length; i++) {
-        const curr = history[i];
-        const type = curr.胜;
-        const value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
-        if (type === '和') {
-          if (trendMap.length > 0) {
-            const last = trendMap.at(-1);
-            if (!grid[last.col][last.row].tie) grid[last.col][last.row].tie = true;
-          }
-          continue;
-        }
-        const prev = trendMap.at(-1);
-        const same = prev && prev.type === type;
-        if (!same) {
-          col++;
-          while (grid[col] && grid[col][0]) col++;
-          row = 0;
-        } else if (row + 1 < maxRow && !(grid[col]?.[row + 1])) {
-          row++;
+    let html = `<div style="display:flex; gap:4px;">`;
+    for (let c = 0; c < grid.length; c++) {
+      html += `<div style="display:flex; flex-direction:column; gap:4px;">`;
+      for (let r = 0; r < 6; r++) {
+        const cell = grid[c]?.[r];
+        if (cell) {
+          const cls = `${cell.type === '庄' ? 'z' : cell.type === '闲' ? 'x' : 'h'}${cell.tie ? ' tie-line' : ''}`;
+          html += `<div class="circle-small ${cls}">${cell.value}</div>`;
         } else {
-          col++;
-          while (grid[col] && grid[col][0]) col++;
-          row = 0;
+          html += `<div style="width:20px;height:20px;"></div>`;
         }
-        if (!grid[col]) grid[col] = [];
-        grid[col][row] = { type, value, tie: false };
-        trendMap.push({ col, row, type });
-      }
-      let html = `<div style="display:flex; gap:4px;">`;
-      for (let c = 0; c < grid.length; c++) {
-        html += `<div style="display:flex; flex-direction:column; gap:4px;">`;
-        for (let r = 0; r < maxRow; r++) {
-          const cell = grid[c]?.[r];
-          if (cell) {
-            const cls = `${cell.type === '庄' ? 'z' : cell.type === '闲' ? 'x' : 'h'}${cell.tie ? ' tie-line' : ''}`;
-            html += `<div class="circle-small ${cls}">${cell.value}</div>`;
-          } else {
-            html += `<div style="width:20px;height:20px;"></div>`;
-          }
-        }
-        html += `</div>`;
       }
       html += `</div>`;
-      return html;
     }
+    html += `</div>`;
+    return html;
+  }
 
-    function updateUI() {
-      document.getElementById("trend").innerHTML = generateDaLuTrend(history);
-      const total = predictions.filter(p => p === '庄' || p === '闲').length;
-      const rate = total ? ((hits / total) * 100).toFixed(1) + '%' : '0%';
-      const lastPrediction = predictions.at(-1);
-      document.getElementById('ai-strategy').textContent = predictStrategy() || '（暂无）';
-      document.getElementById('ai-winrate').textContent = predictWinRate() || '（暂无）';
-      document.getElementById('ai-summary').textContent = lastPrediction || '观望';
-      document.getElementById('ai-stat').textContent = `共分析 ${total} 局，命中 ${hits} 局，命中率：${rate}`;
-    }
-
-    window.onload = () => createButtons();
-  </script>
+  window.onload = () => createButtons();
+</script>
 </body>
 </html>
