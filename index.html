@@ -40,7 +40,7 @@
     }
     .history-row-group {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 4px;
       justify-content: flex-start;
     }
@@ -104,22 +104,22 @@
   <div id="trend" class="mt-3"></div>
 
 <script>
-let history=[], predictions=[], selected={庄:null,闲:null}, lastPrediction=null;
+let history = [], predictions = [], selected = {庄: null, 闲: null}, lastPrediction = null;
 
-function createButtons(){
+function createButtons() {
   const layout = ['1','2','3','4','5','6','7','8','9','','0',''];
-  ['闲','庄'].forEach(side=>{
-    const wrap = document.getElementById((side==='庄'?'zhuang':'xian')+'-points');
+  ['闲','庄'].forEach(side => {
+    const wrap = document.getElementById((side === '庄' ? 'zhuang' : 'xian') + '-points');
     wrap.innerHTML = '';
-    layout.forEach(v=>{
+    layout.forEach(v => {
       const b = document.createElement('button');
       b.className = 'btn btn-light num-btn';
-      if(v===''){ b.disabled = true; b.style.visibility = 'hidden'; }
+      if (v === '') { b.disabled = true; b.style.visibility = 'hidden'; }
       else {
         b.textContent = v;
-        b.onclick = ()=>{
+        b.onclick = () => {
           selected[side] = parseInt(v);
-          [...wrap.children].forEach(x=>x.classList.remove('selected'));
+          [...wrap.children].forEach(x => x.classList.remove('selected'));
           b.classList.add('selected');
         };
       }
@@ -128,21 +128,26 @@ function createButtons(){
   });
 }
 
-function formatSide(s){ return s==='庄'?'<span class="text-z">庄</span>':'<span class="text-x">闲</span>'; }
-function clearSelection(){ document.querySelectorAll('.num-btn').forEach(b=>b.classList.remove('selected')) }
+function formatSide(s) {
+  return s === '庄' ? '<span class="text-z">庄</span>' : '<span class="text-x">闲</span>';
+}
 
-function addOnly(){
-  if(selected.庄==null||selected.闲==null) return alert('请选择点数');
-  const 胜=selected.庄>selected.闲?'庄':selected.闲>selected.庄?'闲':'和';
+function clearSelection() {
+  document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function addOnly() {
+  if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
+  const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
   history.push({...selected, 胜, 差: Math.abs(selected.庄 - selected.闲)});
   predictions.push('');
-  selected={庄:null,闲:null};
+  selected = {庄: null, 闲: null};
   updateUI(); clearSelection();
 }
 
-function addAndAnalyze(){
-  if(selected.庄==null||selected.闲==null) return alert('请选择点数');
-  const 胜=selected.庄>selected.闲?'庄':selected.闲>selected.庄?'闲':'和';
+function addAndAnalyze() {
+  if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
+  const 胜 = selected.庄 > selected.闲 ? '庄' : selected.闲 > selected.庄 ? '闲' : '和';
   const current = {...selected, 胜, 差: Math.abs(selected.庄 - selected.闲)};
   const predicted = predictNext();
   const summaryText = document.getElementById('summary').textContent;
@@ -150,47 +155,46 @@ function addAndAnalyze(){
 
   history.push(current);
   predictions.push(isAnalyzable ? predicted : '');
-  selected={庄:null,闲:null};
+  selected = {庄: null, 闲: null};
   updateUI(); lastPrediction = predicted; clearSelection();
 }
 
-function predictNext(){
-  const h=history,l=h.at(-1),s=h.length>1?h.at(-2):null;let p='';
-  if(l.胜==='和'){
-    document.getElementById('ai-result').textContent='上一局为和局，建议观望';
-    document.getElementById('ai-stat').textContent='无大数据统计（和局）';
-    document.getElementById('summary').textContent='建议观望';
+function predictNext() {
+  const h = history, l = h.at(-1), s = h.length > 1 ? h.at(-2) : null; let p = '';
+  if (l.胜 === '和') {
+    document.getElementById('ai-result').textContent = '上一局为和局，建议观望';
+    document.getElementById('ai-stat').textContent = '无大数据统计（和局）';
+    document.getElementById('summary').textContent = '建议观望';
     return '';
   }
-  if(s && l.胜===s.胜 && s.胜!=='和' && (l.差>=3 || s.差>=3)){
-    p=l.胜;
-    document.getElementById('ai-result').innerHTML=`上局为 ${formatSide(l.胜)} 连胜且大点差，建议继续追 ${formatSide(l.胜)}`;
-    document.getElementById('ai-stat').innerHTML=`${formatSide('庄')} 胜率 58% ／ ${formatSide('闲')} 胜率 42%`;
-    updateSummary(p,'庄');
-  }
-  else if(l.差<=2){
-    p=l.胜==='庄'?'闲':'庄';
-    document.getElementById('ai-result').innerHTML=`上局为 ${formatSide(l.胜)} 弱胜，建议反打 ${formatSide(p)}`;
-    document.getElementById('ai-stat').innerHTML=`${formatSide('庄')} 胜率 55% ／ ${formatSide('闲')} 胜率 45%`;
-    updateSummary(p,'庄');
+  if (s && l.胜 === s.胜 && s.胜 !== '和' && (l.差 >= 3 || s.差 >= 3)) {
+    p = l.胜;
+    document.getElementById('ai-result').innerHTML = `上局为 ${formatSide(l.胜)} 连胜且大点差，建议继续追 ${formatSide(l.胜)}`;
+    document.getElementById('ai-stat').innerHTML = `${formatSide('庄')} 胜率 58% ／ ${formatSide('闲')} 胜率 42%`;
+    updateSummary(p, '庄');
+  } else if (l.差 <= 2) {
+    p = l.胜 === '庄' ? '闲' : '庄';
+    document.getElementById('ai-result').innerHTML = `上局为 ${formatSide(l.胜)} 弱胜，建议反打 ${formatSide(p)}`;
+    document.getElementById('ai-stat').innerHTML = `${formatSide('庄')} 胜率 55% ／ ${formatSide('闲')} 胜率 45%`;
+    updateSummary(p, '庄');
   } else {
-    document.getElementById('ai-result').textContent='无明显趋势，建议观望';
-    document.getElementById('ai-stat').textContent='当前走势匹配数据较少';
-    document.getElementById('summary').textContent='建议观望';
+    document.getElementById('ai-result').textContent = '无明显趋势，建议观望';
+    document.getElementById('ai-stat').textContent = '当前走势匹配数据较少';
+    document.getElementById('summary').textContent = '建议观望';
     return '';
   }
   return p;
 }
 
-function updateSummary(predicted, top){
-  if(!predicted || predicted !== top){
-    document.getElementById('summary').innerHTML='建议观望';
+function updateSummary(predicted, top) {
+  if (!predicted || predicted !== top) {
+    document.getElementById('summary').innerHTML = '建议观望';
     return;
   }
-  document.getElementById('summary').innerHTML=`✅ 策略与胜率一致，推荐下注 ${formatSide(predicted)}`;
+  document.getElementById('summary').innerHTML = `✅ 策略与胜率一致，推荐下注 ${formatSide(predicted)}`;
 }
 
-function generateDaLuTrend(history){
+function generateDaLuTrend(history) {
   const maxRow = 6;
   let grid = [], trendMap = [];
   let col = -1, row = 0;
@@ -198,20 +202,18 @@ function generateDaLuTrend(history){
   for (let i = 0; i < history.length; i++) {
     const curr = history[i];
     const type = curr.胜;
-    if (type === '和') {
-      if (trendMap.length) trendMap.at(-1).tie = true;
-      continue;
-    }
+    let value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
 
     const prev = trendMap.at(-1);
-    const same = prev && prev.type === type;
+    const same = prev && prev.type === type && type !== '和';
 
-    if (!same) { col++; row = 0; }
-    else if (row + 1 < maxRow && !(grid[col]?.[row + 1])) row++;
+    if (type === '和') { col++; row = 0; }
+    else if (!same) { col++; row = 0; }
+    else if (row + 1 < maxRow && !(grid[col]?.[row + 1])) { row++; }
     else { col++; row = 0; }
 
     if (!grid[col]) grid[col] = [];
-    grid[col][row] = { type, value: type === '庄' ? curr.庄 : curr.闲 };
+    grid[col][row] = { type, value };
     trendMap.push({ col, row, type });
   }
 
@@ -220,7 +222,12 @@ function generateDaLuTrend(history){
     html += `<div style="display:flex; flex-direction:column; gap:4px;">`;
     for (let r = 0; r < maxRow; r++) {
       const cell = grid[c]?.[r];
-      html += cell ? `<div class="circle-small ${cell.type === '庄' ? 'z' : 'x'}">${cell.value}</div>` : `<div style="width:20px;height:20px;"></div>`;
+      if (cell) {
+        let cls = cell.type === '庄' ? 'z' : cell.type === '闲' ? 'x' : 'h';
+        html += `<div class="circle-small ${cls}">${cell.value}</div>`;
+      } else {
+        html += `<div style="width:20px;height:20px;"></div>`;
+      }
     }
     html += `</div>`;
   }
@@ -228,44 +235,46 @@ function generateDaLuTrend(history){
   return html;
 }
 
-function updateUI(){
+function updateUI() {
   const historyHTML = history.map((h, i) => {
     let bg = '';
-    if (predictions[i]==='庄'||predictions[i]==='闲') {
-      bg = predictions[i]===h.胜 ? 'background-color:#e0f7f1;' : 'background-color:#fde8e8;';
+    if (predictions[i] === '庄' || predictions[i] === '闲') {
+      bg = predictions[i] === h.胜 ? 'background-color:#e0f7f1;' : 'background-color:#fde8e8;';
     }
     return `<div class='history-entry' style='${bg}'><span>局${i+1}</span><span class="${h.胜==='庄'?'btn-zhuang':h.胜==='闲'?'btn-xian':'btn-he'} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
   });
   const grouped = [];
-  for(let i=0;i<historyHTML.length;i+=3){
-    grouped.push(`<div class='history-row-group w-100'>${historyHTML[i]||''}${historyHTML[i+1]||''}${historyHTML[i+2]||''}</div>`);
+  for (let i = 0; i < historyHTML.length; i++) {
+    if (i % 3 === 0) grouped.push(`<div class='history-row-group w-100'>`);
+    grouped.push(historyHTML[i]);
+    if (i % 3 === 2 || i === historyHTML.length - 1) grouped.push(`</div>`);
   }
   document.getElementById('history').innerHTML = grouped.join('');
   document.getElementById('trend').innerHTML = generateDaLuTrend(history);
 
-  const valid=predictions.map((p,i)=>({p,i})).filter(({p,i})=>p&&(history[i].胜==='庄'||history[i].胜==='闲'));
-  const correct=valid.filter(({p,i})=>p===history[i].胜).length;
-  const total=valid.length;
-  const rate=total?((correct/total)*100).toFixed(1):'0';
-  document.getElementById('hit-stat').textContent=`已分析 ${total} 局，命中 ${correct} 局，命中率：${rate}%`;
+  const valid = predictions.map((p, i) => ({p, i})).filter(({p, i}) => p && (history[i].胜 === '庄' || history[i].胜 === '闲'));
+  const correct = valid.filter(({p, i}) => p === history[i].胜).length;
+  const total = valid.length;
+  const rate = total ? ((correct / total) * 100).toFixed(1) : '0';
+  document.getElementById('hit-stat').textContent = `已分析 ${total} 局，命中 ${correct} 局，命中率：${rate}%`;
 }
 
-function undo(){
-  history.pop(); predictions.pop(); updateUI(); lastPrediction=null;
-  document.getElementById('ai-result').textContent='（暂无建议）';
-  document.getElementById('ai-stat').textContent='（暂无统计数据）';
-  document.getElementById('summary').textContent='（请先输入数据）';
-  document.getElementById('hit-stat').textContent='';
+function undo() {
+  history.pop(); predictions.pop(); updateUI(); lastPrediction = null;
+  document.getElementById('ai-result').textContent = '（暂无建议）';
+  document.getElementById('ai-stat').textContent = '（暂无统计数据）';
+  document.getElementById('summary').textContent = '（请先输入数据）';
+  document.getElementById('hit-stat').textContent = '';
 }
 
-function resetAll(){
-  if(confirm('确认清空？')){
-    history=[]; predictions=[]; lastPrediction=null;
+function resetAll() {
+  if (confirm('确认清空？')) {
+    history = []; predictions = []; lastPrediction = null;
     updateUI();
-    document.getElementById('ai-result').textContent='（暂无建议）';
-    document.getElementById('ai-stat').textContent='（暂无统计数据）';
-    document.getElementById('summary').textContent='（请先输入数据）';
-    document.getElementById('hit-stat').textContent='';
+    document.getElementById('ai-result').textContent = '（暂无建议）';
+    document.getElementById('ai-stat').textContent = '（暂无统计数据）';
+    document.getElementById('summary').textContent = '（请先输入数据）';
+    document.getElementById('hit-stat').textContent = '';
   }
 }
 
