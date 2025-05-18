@@ -72,7 +72,7 @@
   <div id="history" class="my-2"></div>
   <div id="trend" class="mt-3"></div>
 <script>
-let history = [], predictions = [], selected = {庄: null, 闲: null}, hitResults = [];
+let history = [], predictions = [], selected = {庄: null, 闲: null}, hitResults = [], lastPrediction = '';
 
 function createButtons() {
   const layout = ['1','2','3','4','5','6','7','8','9','','0',''];
@@ -110,12 +110,16 @@ function addAndAnalyze() {
   if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
   const 胜 = selected.庄 > selected.闲 ? '庄' : selected.庄 < selected.闲 ? '闲' : '和';
   const current = {...selected, 胜, 差: Math.abs(selected.庄 - selected.闲)};
+
+  predictions.push(lastPrediction);
+  hitResults.push(null);
+  history.push(current);
+
   const predicted = predictNext();
   const summaryText = document.getElementById('summary').textContent;
   const isAnalyzable = predicted && 胜 !== '和' && !summaryText.includes('观望');
-  history.push(current);
-  predictions.push(isAnalyzable ? predicted : '');
-  hitResults.push(null);
+  lastPrediction = isAnalyzable ? predicted : '';
+
   selected = {庄: null, 闲: null};
   updateUI(); clearSelection();
 }
@@ -154,7 +158,7 @@ function undo() {
 
 function resetAll() {
   if (confirm('确认清空？')) {
-    history = []; predictions = []; hitResults = [];
+    history = []; predictions = []; hitResults = []; lastPrediction = '';
     updateUI();
   }
 }
@@ -165,7 +169,6 @@ function clearSelection() {
 
 function updateUI() {
   updateHitStats();
-
   const historyHTML = history.map((h, i) => {
     let bg = '';
     if (hitResults[i] === true) bg = 'background-color:#e0f7f1;';
@@ -224,7 +227,7 @@ function generateDaLuTrend(history) {
         row++;
       } else {
         col++;
-        row = prevRow; // 横向展开保持行不变（L型）
+        row = prevRow;
       }
     } else {
       col++;
