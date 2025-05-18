@@ -163,31 +163,17 @@ function clearSelection() {
   document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
 }
 
-function updateUI() {
-  updateHitStats();
-
-  const historyHTML = history.map((h, i) => {
-    let bg = '';
-    if (hitResults[i] === true) bg = 'background-color:#e0f7f1;';
-    if (hitResults[i] === false) bg = 'background-color:#fde8e8;';
-    return `<div class='history-entry' style='${bg}'><span>局${i+1}</span><span class="${h.胜==='庄'?'btn-zhuang':h.胜==='闲'?'btn-xian':'btn-he'} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
-  });
-
-  const grouped = [];
-  for (let i = 0; i < historyHTML.length; i++) {
-    if (i % 3 === 0) grouped.push(`<div class='history-row-group w-100'>`);
-    grouped.push(historyHTML[i]);
-    if (i % 3 === 2 || i === historyHTML.length - 1) grouped.push(`</div>`);
-  }
-  document.getElementById('history').innerHTML = grouped.join('');
-  document.getElementById('trend').innerHTML = generateDaLuTrend(history);
-}
-
 function updateHitStats() {
   let correct = 0, total = 0;
   for (let i = 1; i < history.length; i++) {
     const pred = predictions[i - 1];
     const actual = history[i].胜;
+
+    if (actual === '和') {
+      hitResults[i] = null;
+      continue; // 跳过和局
+    }
+
     if (pred && (pred === '庄' || pred === '闲')) {
       total++;
       const hit = pred === actual;
@@ -224,11 +210,13 @@ function generateDaLuTrend(history) {
         row++;
       } else {
         col++;
-        row = prevRow; // 横向展开保持行不变（L型）
+        row = prevRow;
       }
     } else {
       col++;
-      row = 0;
+      // 如果上一列超过一行，则从第二排开始
+      const prevColHeight = grid[prevCol]?.length || 0;
+      row = prevColHeight > 1 ? 1 : 0;
     }
 
     if (!grid[col]) grid[col] = [];
