@@ -10,20 +10,11 @@
     h3 { font-weight: bold; margin-bottom: 1rem; }
     .btn-zhuang { background-color: red; color: white; }
     .btn-xian { background-color: blue; color: white; }
-    .btn-he { background-color: teal; color: white; }
     .num-grid { display: grid; grid-template-columns: repeat(3, 60px); gap: 10px; justify-content: center; margin-bottom: 1rem; }
     .num-btn { height: 50px; font-size: 20px; }
     .selected { border: 3px solid gold !important; filter: brightness(85%); }
     .bottom-btns { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; }
     .bottom-btns button { min-width: 70px; font-size: 14px; }
-    .history-entry {
-      display: grid; grid-template-columns: auto auto auto auto auto;
-      font-size: 13px; gap: 4px; margin: 1px; border-radius: 5px;
-      padding: 4px; background: #fff;
-    }
-    .history-row-group {
-      display: flex; flex-wrap: nowrap; gap: 4px; justify-content: flex-start;
-    }
     .circle-small {
       width: 20px; height: 20px; line-height: 20px; border-radius: 50%;
       font-size: 12px; font-weight: bold; text-align: center; color: white;
@@ -71,6 +62,7 @@
   </div>
   <div id="history" class="my-2"></div>
   <div id="trend" class="mt-3"></div>
+
 <script>
 let history = [], predictions = [], selected = {庄: null, 闲: null}, hitResults = [];
 
@@ -87,8 +79,9 @@ function createButtons() {
         b.textContent = v;
         b.onclick = () => {
           selected[side] = parseInt(v);
-          [...wrap.children].forEach(x => x.classList.remove('selected'));
+          wrap.querySelectorAll('.num-btn').forEach(x => x.classList.remove('selected'));
           b.classList.add('selected');
+          console.log(`当前选择 ${side}:`, v);
         };
       }
       wrap.appendChild(b);
@@ -97,6 +90,7 @@ function createButtons() {
 }
 
 function addOnly() {
+  console.log('【添加按钮】当前选择:', selected);
   if (selected.庄 == null || selected.闲 == null) return alert('请选择点数');
   const 胜 = selected.庄 > selected.闲 ? '庄' : selected.庄 < selected.闲 ? '闲' : '和';
   history.push({...selected, 胜, 差: Math.abs(selected.庄 - selected.闲)});
@@ -168,12 +162,7 @@ function updateHitStats() {
   for (let i = 1; i < history.length; i++) {
     const pred = predictions[i - 1];
     const actual = history[i].胜;
-
-    if (actual === '和') {
-      hitResults[i] = null;
-      continue; // 跳过和局
-    }
-
+    if (actual === '和') { hitResults[i] = null; continue; }
     if (pred && (pred === '庄' || pred === '闲')) {
       total++;
       const hit = pred === actual;
@@ -185,6 +174,11 @@ function updateHitStats() {
   }
   const rate = total ? ((correct / total) * 100).toFixed(1) : '0';
   document.getElementById('hit-stat').textContent = `已分析 ${total} 局，命中 ${correct} 局，命中率：${rate}%`;
+}
+
+function updateUI() {
+  updateHitStats();
+  document.getElementById('trend').innerHTML = generateDaLuTrend(history);
 }
 
 function generateDaLuTrend(history) {
@@ -214,7 +208,6 @@ function generateDaLuTrend(history) {
       }
     } else {
       col++;
-      // 如果上一列超过一行，则从第二排开始
       const prevColHeight = grid[prevCol]?.length || 0;
       row = prevColHeight > 1 ? 1 : 0;
     }
