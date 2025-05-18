@@ -216,9 +216,8 @@ function generateDaLuTrend(history) {
     const type = curr.胜;
     const value = type === '庄' ? curr.庄 : type === '闲' ? curr.闲 : '和';
 
-    let tie = false;
     if (type === '和') {
-      if (trendMap.length > 0) trendMap.at(-1).tie = true;
+      trendMap.push({ col: -1, row: -1, type: '和', tieTo: trendMap.at(-1) });
       continue;
     }
 
@@ -234,15 +233,12 @@ function generateDaLuTrend(history) {
     trendMap.push({ col, row, type });
   }
 
-  // 标记和局位置
-  history.forEach((h, i) => {
-    if (h.胜 === '和' && i > 0) {
-      for (let c = 0; c < grid.length; c++) {
-        for (let r = 0; r < maxRow; r++) {
-          if (grid[c]?.[r] && (grid[c][r].value == history[i - 1].庄 || grid[c][r].value == history[i - 1].闲)) {
-            grid[c][r].tie = true;
-          }
-        }
+  // 标记和局位置（准确标到前一局）
+  trendMap.forEach((entry, i) => {
+    if (entry.type === '和' && entry.tieTo && entry.tieTo.col >= 0) {
+      const t = entry.tieTo;
+      if (grid[t.col] && grid[t.col][t.row]) {
+        grid[t.col][t.row].tie = true;
       }
     }
   });
