@@ -169,10 +169,21 @@ function clearSelection() {
 
 function updateUI() {
   updateHitStats();
+
   const historyHTML = history.map((h, i) => {
     let bg = '';
-    if (hitResults[i] === true) bg = 'background-color:#e0f7f1;';
-    if (hitResults[i] === false) bg = 'background-color:#fde8e8;';
+    const nextPrediction = predictions[i];
+    const nextActual = history[i + 1]?.胜;
+
+    if ((nextPrediction === '庄' || nextPrediction === '闲') &&
+        (nextActual === '庄' || nextActual === '闲')) {
+      if (nextPrediction === nextActual) {
+        bg = 'background-color:#e0f7f1;';
+      } else {
+        bg = 'background-color:#fde8e8;';
+      }
+    }
+
     return `<div class='history-entry' style='${bg}'><span>局${i+1}</span><span class="${h.胜==='庄'?'btn-zhuang':h.胜==='闲'?'btn-xian':'btn-he'} px-2 rounded">${h.胜}</span><span>庄:${h.庄}</span><span>闲:${h.闲}</span></div>`;
   });
 
@@ -191,7 +202,7 @@ function updateHitStats() {
   for (let i = 1; i < history.length; i++) {
     const pred = predictions[i - 1];
     const actual = history[i].胜;
-    if (pred && (pred === '庄' || pred === '闲')) {
+    if (pred && (pred === '庄' || pred === '闲') && (actual === '庄' || actual === '闲')) {
       total++;
       const hit = pred === actual;
       if (hit) correct++;
